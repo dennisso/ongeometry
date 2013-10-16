@@ -1,4 +1,5 @@
 #include <shapefil.h>
+#include <geos_c.h>
 
 int main(int argc, char *argv[])
 {
