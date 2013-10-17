@@ -11,6 +11,7 @@ int main(int argc, char *argv[])
    int nShapeType, nEntities, i, iPart, bValidate = 0, nInvalidCount = 0;
    int bHeaderOnly = 0;
    double adfMinBound[4], adfMaxBound[4];
+   const char *pszPlus;
    
    hShp = SHPOpen(argv[1], "rb");
 
@@ -35,8 +36,63 @@ int main(int argc, char *argv[])
       adfMaxBound[1], 
       adfMaxBound[2], 
       adfMaxBound[3]);
+   for (int i = 0; i < 1; i++)
+   //for (int i = 0; i < nEntities; i++)
+   {
+      SHPObject *psShape;
+      psShape = SHPReadObject(hShp, i);
 
-   #define BUFSIZE 8192
+      if (psShape == NULL)
+      {
+         fprintf(stderr, "Unable to read shape %d, stop object reading...\n",
+            i);
+         break;
+      }
+
+      printf("Shape:%d (%s) nVertices=%d nParts=%d\n",
+         i, SHPTypeName(psShape->nSHPType),
+         psShape->nVertices, psShape->nParts);
+   
+      for (int j = 0, iPart = 1; j < psShape->nVertices; j++)
+      {
+         const char *pszPartType = "";
+
+         if (j == 0 && psShape->nParts > 0)
+            pszPartType = SHPPartTypeName(psShape->panPartType[0]);
+
+         if (iPart < psShape->nParts &&
+               psShape->panPartStart[iPart] == j)
+         {
+            pszPartType = SHPPartTypeName(psShape->panPartType[iPart]);
+            iPart++;
+            pszPlus = "+";
+         }
+         else
+            pszPlus = "+";
+
+         if (psShape->bMeasureIsUsed)
+         {
+            printf("%s (%.15g,%.15g,%.15g,%.15g) %s\n",
+               pszPlus,
+               psShape->padfX[j],
+               psShape->padfY[j],
+               psShape->padfZ[j],
+               psShape->padfM[j],
+               pszPartType);
+         }
+         else
+         {
+            printf("%s (%.15g,%.15g,%.15g) %s\n",
+               pszPlus,
+               psShape->padfX[j],
+               psShape->padfY[j],
+               psShape->padfZ[j],
+               pszPartType);
+         }
+      }
+
+      SHPDestroyObject(psShape);
+   }
 
    void notice(const char *fmt, ...)
    {
@@ -61,6 +117,9 @@ int main(int argc, char *argv[])
    }
 
    initGEOS(notice, log_and_exit);
+   
+   printf("GEOS version %s\n", GEOSversion());
+   
    finishGEOS();
 
 EXIT:

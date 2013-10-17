@@ -7,7 +7,7 @@ OUT = onland
 
 INCLUDES =-Iinclude
 
-CFLAGS=-Wall
+CFLAGS=-Wall -std=c99
 CC=gcc
 LIBS=-lgeos_c -Llib -lshp
 
