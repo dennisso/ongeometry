@@ -1,3 +1,7 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+
 #include <shapefil.h>
 #include <geos_c.h>
 
@@ -31,6 +35,33 @@ int main(int argc, char *argv[])
       adfMaxBound[1], 
       adfMaxBound[2], 
       adfMaxBound[3]);
+
+   #define BUFSIZE 8192
+
+   void notice(const char *fmt, ...)
+   {
+      va_list ap;
+
+      fprintf(stdout, "NOTICE: ");
+      va_start(ap, fmt);
+      vfprintf(stdout,fmt, ap);
+      va_end(ap);
+      fprintf(stdout, "\n");
+   }
+
+   void log_and_exit(const char *fmt, ...)
+   {
+      va_list ap;
+
+      fprintf(stdout, "ERROR: ");
+      vfprintf(stdout, fmt, ap);
+      va_end(ap);
+      fprintf(stdout, "\n");
+      exit(1);
+   }
+
+   initGEOS(notice, log_and_exit);
+   finishGEOS();
 
 EXIT:
    return 0;

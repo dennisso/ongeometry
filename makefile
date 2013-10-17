@@ -9,7 +9,7 @@ INCLUDES =-Iinclude
 
 CFLAGS=-Wall
 CC=gcc
-LIBS=-Llib -lgeos_c -lshp
+LIBS=-lgeos_c -Llib -lshp
 
 .SUFFIXES: .c
 
