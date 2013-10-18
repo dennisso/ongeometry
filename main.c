@@ -48,7 +48,8 @@ int shpOpen(SHPHandle *hShp, char *path)
    }
 
    SHPGetInfo(*hShp, &nEntities, &nShapeType, adfMinBound, adfMaxBound );
-
+   
+   /*
    printf("Shapefile Type: %s   # of Shapes: %d\n\n",
       SHPTypeName(nShapeType), nEntities);
     
@@ -62,7 +63,7 @@ int shpOpen(SHPHandle *hShp, char *path)
       adfMaxBound[1], 
       adfMaxBound[2], 
       adfMaxBound[3]);
-
+   */
 EXIT:
    return (isError != 0) ? -1 : 0;
 }
@@ -172,9 +173,9 @@ int main(int argc, char *argv[])
    x = atof(argv[2]);
    y = atof(argv[3]); 
    
-   printf("OnLand: %d\n", isOnLand(&hShp, x, y));
+   printf("%d\n", isOnLand(&hShp, x, y));
      
-   printf("GEOS: %s\n", GEOSversion()); 
+   //printf("GEOS: %s\n", GEOSversion()); 
    finishGEOS();
 
 GC:     
