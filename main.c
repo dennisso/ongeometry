@@ -5,7 +5,7 @@ int main(int argc, char *argv[])
    int isError = 0;
    double x, y;
    SHPHandle hShp;
-
+  
    if (argc < 4)
    {
       printf("Usage: onland <shapefile path> <x|long> <y|lat>\n");
@@ -19,11 +19,20 @@ int main(int argc, char *argv[])
       
    initGEOS(notice, log_and_exit);   
 
+   GEOSCoordSeq **linearRingCsList;
+   GEOSGeom **linearRingList, *polygonList;
+
+   printf("loading...\n");
+   shpLoad(&hShp, &linearRingCsList, &linearRingList, &polygonList);
+   
    x = atof(argv[2]);
    y = atof(argv[3]); 
    
-   printf("%d\n", isOnLand(&hShp, x, y));
-     
+   printf("%d\n", isOnLand(&hShp, &polygonList, x, y));
+   
+   printf("unloading...\n");
+   shpUnload(&hShp, &linearRingCsList, &linearRingList, &polygonList);
+  
    //printf("GEOS: %s\n", GEOSversion()); 
    finishGEOS();
 

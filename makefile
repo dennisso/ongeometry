@@ -12,7 +12,7 @@ OUT_TEST = test
 
 INCLUDES =-Iinclude
 
-CFLAGS=-Wall -std=c99
+CFLAGS=-Wall -std=c99 -g
 CC=gcc
 LIBS=-lgeos_c -Llib -lshp
 

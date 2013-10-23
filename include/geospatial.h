@@ -14,7 +14,11 @@ extern void notice (const char *, ...);
 extern void log_and_exit(const char *, ...);
 
 extern int shpOpen(SHPHandle *, char *);
-extern int isOnLand(SHPHandle *, double, double);
+extern int shpLoad(SHPHandle *hShp, GEOSCoordSeq ***linearRingCsList,
+   GEOSGeom ***linearRingList, GEOSGeom **polygonList);
+extern int shpUnload(SHPHandle *hShp, GEOSCoordSeq ***linearRingCsList,
+   GEOSGeom ***linearRingList, GEOSGeom **polygonList);
+extern int isOnLand(SHPHandle *hShp, GEOSGeom **, double, double);
 
 #endif // _GEOSPATIAL_H_
 
