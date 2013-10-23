@@ -108,7 +108,7 @@ int shpLoad(SHPHandle *hShp, GEOSCoordSeq ***linearRingCsList,
          for (unsigned int k = startIdx; k < endIdx; k++)
          {
             GEOSCoordSeq_setX((*linearRingCsList)[i][j], k - startIdx, psShape->padfX[k]);
-            GEOSCoordSeq_setY((*linearRingCsList)[i][j], k - startIdx, psShape->padfX[k]);
+            GEOSCoordSeq_setY((*linearRingCsList)[i][j], k - startIdx, psShape->padfY[k]);
          }
          
          (*linearRingList)[i][j] = GEOSGeom_createLinearRing((*linearRingCsList)[i][j]);
@@ -154,8 +154,6 @@ int shpUnload(SHPHandle *hShp, GEOSCoordSeq ***linearRingCsList,
       free((*linearRingCsList)[i]); 
       free((*linearRingList)[i]);
    }
-
-
 
    // free the libgeos pointers
    free(*polygonList);
