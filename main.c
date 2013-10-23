@@ -2,7 +2,7 @@
 
 int main(int argc, char *argv[])
 {
-   int isError = 0;
+   int isError = 0, result = 0;
    double x, y;
    SHPHandle hShp;
   
@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
 
    // if it does not return 0, it's an error
    if (shpOpen(&hShp, argv[1]) != 0)
-      goto GC;
+      goto GC_SHP;
       
    initGEOS(notice, log_and_exit);   
 
@@ -23,22 +23,29 @@ int main(int argc, char *argv[])
    GEOSGeom **linearRingList, *polygonList;
 
    printf("loading...\n");
-   shpLoad(&hShp, &linearRingCsList, &linearRingList, &polygonList);
+   result = shpLoad(&hShp, &linearRingCsList, &linearRingList, &polygonList); 
+   if (result != 0)
+   {  
+      printf("loading failed...\n");
+      goto GC_GEOS;
+   }
    
    x = atof(argv[2]);
    y = atof(argv[3]); 
    
    printf("%d\n", isOnLand(&hShp, &polygonList, x, y));
-   
+
+GC_GEOS:
    printf("unloading...\n");
    shpUnload(&hShp, &linearRingCsList, &linearRingList, &polygonList);
-  
+
    //printf("GEOS: %s\n", GEOSversion()); 
    finishGEOS();
 
-GC:     
+GC_SHP:
    // destroy shp handle; frees its pointer
    SHPClose(hShp);
+
 EXIT:   
    return (isError != 1) ? -1 : 0;
 }

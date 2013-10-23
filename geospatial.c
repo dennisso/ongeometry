@@ -88,7 +88,8 @@ int shpLoad(SHPHandle *hShp, GEOSCoordSeq ***linearRingCsList,
       if (psShape == NULL)
       {
          fprintf(stderr, "Unable to read shape %d, stop object reading...\n", i);
-         break;
+         isError = 1;
+         goto EXIT;
       }
       
       //printf("Shape:%d (%s) nVertices=%d nParts=%d\n",
@@ -114,8 +115,15 @@ int shpLoad(SHPHandle *hShp, GEOSCoordSeq ***linearRingCsList,
          (*linearRingList)[i][j] = GEOSGeom_createLinearRing((*linearRingCsList)[i][j]);
       }
 
-      (*polygonList)[i] = GEOSGeom_createPolygon(
+      (*polygonList)[i]  = GEOSGeom_createPolygon(
          (*linearRingList)[i][0], &(*linearRingList)[i][1], psShape->nParts - 1);
+
+      if (!GEOSisValid((*polygonList)[i]))
+      {
+         fprintf(stderr, "Invalid polygon. Shapefile is not valid...\n");
+         isError = 1;
+         break; 
+      }
 
       //char *wkt_c = GEOSGeomToWKT(polygonList[i]);
       //printf("%s\n", wkt_c);
@@ -123,6 +131,10 @@ int shpLoad(SHPHandle *hShp, GEOSCoordSeq ***linearRingCsList,
       // destroy shapefile obj; frees its pointer
       SHPDestroyObject(psShape);
    }
+
+GC:
+   //if (psShape)
+   //   SHPDestroyObject(psShape);
    
 EXIT:
    return (isError != 0) ? -1 : 0;
@@ -151,14 +163,19 @@ int shpUnload(SHPHandle *hShp, GEOSCoordSeq ***linearRingCsList,
          GEOSGeom_destroy((*polygonList)[i]);
       }
 
-      free((*linearRingCsList)[i]); 
+      free((*linearRingCsList)[i]);
+      (*linearRingCsList)[i] = NULL; 
       free((*linearRingList)[i]);
+      (*linearRingList)[i] = NULL;
    }
 
    // free the libgeos pointers
    free(*polygonList);
+   *polygonList  = NULL;
    free(*linearRingCsList);
+   *linearRingCsList = NULL;
    free(*linearRingList);
+   *linearRingList = NULL;
 
 EXIT:
    return (isError != 0) ? -1 : 0;

@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
    if (shpOpen(&hShp, argv[1]) != 0)
    {
       printf("error: cannot open shapefile at %s\n", argv[1]);
-      goto GC;
+      goto GC_SHP;
    }
       
    initGEOS(notice, log_and_exit);   
@@ -60,7 +60,11 @@ int main(int argc, char *argv[])
    GEOSGeom **linearRingList, *polygonList;
 
    printf("loading...\n");
-   shpLoad(&hShp, &linearRingCsList, &linearRingList, &polygonList);
+   if(shpLoad(&hShp, &linearRingCsList, &linearRingList, &polygonList) != 0)
+   {
+      printf("error: cannot load shapefile at %s\n", argv[1]);
+      goto GC_GEOS;
+   }
 
    char *result = all_tests(&hShp, &polygonList);
 
@@ -70,16 +74,18 @@ int main(int argc, char *argv[])
       printf("Tests pass\n");
 
    printf("Tests run: %d\n", tests_run);
-   
+
+GC_GEOS:
    printf("unloading...\n");
    shpUnload(&hShp, &linearRingCsList, &linearRingList, &polygonList);
- 
+
    //printf("GEOS: %s\n", GEOSversion()); 
    finishGEOS();
 
-GC:     
+GC_SHP:
    // destroy shp handle; frees its pointer
    SHPClose(hShp);
+
 EXIT:
    return (result != 0) ? -1 : 0;
 }
