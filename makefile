@@ -18,7 +18,7 @@ LIBS=-lgeos_c -Llib -lshp
 
 .SUFFIXES: .c
 
-all: dep $(OUT) $(OUT_TEST)
+all: clean dep $(OUT) $(OUT_TEST)
 
 test_all: dep_test $(OUT_TEST)
 

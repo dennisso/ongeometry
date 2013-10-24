@@ -113,16 +113,28 @@ int shpLoad(SHPHandle *hShp, GEOSCoordSeq ***linearRingCsList,
          }
          
          (*linearRingList)[i][j] = GEOSGeom_createLinearRing((*linearRingCsList)[i][j]);
+         
+         //char *wkt_c = GEOSGeomToWKT((*linearRingList)[i][j]);
+         //printf("[%d][%d]: %s\n", i, j, wkt_c);
       }
 
       (*polygonList)[i]  = GEOSGeom_createPolygon(
          (*linearRingList)[i][0], &(*linearRingList)[i][1], psShape->nParts - 1);
 
-      if (!GEOSisValid((*polygonList)[i]))
+      int bufferCount = 0;
+
+      while (!GEOSisValid((*polygonList)[i]))
       {
-         fprintf(stderr, "Invalid polygon. Shapefile is not valid...\n");
-         isError = 1;
-         break; 
+         if (bufferCount > 10)
+         {
+            fprintf(stderr, "ERROR: polygon cannot be be saved by buffering; shapefile is not valid...\n");
+            fprintf(stderr, "%s\n", GEOSisValidReason((*polygonList)[i]));
+            isError = 1;
+            goto EXIT;
+         }
+         
+         printf("NOTICE: buffer invalid polygon using a width=0.0 and quad_seg=8; iteration: %d\n", bufferCount + 1);
+         (*polygonList)[i] = GEOSBuffer((*polygonList)[i], 0.0, 8);
       }
 
       //char *wkt_c = GEOSGeomToWKT(polygonList[i]);
@@ -132,10 +144,6 @@ int shpLoad(SHPHandle *hShp, GEOSCoordSeq ***linearRingCsList,
       SHPDestroyObject(psShape);
    }
 
-GC:
-   //if (psShape)
-   //   SHPDestroyObject(psShape);
-   
 EXIT:
    return (isError != 0) ? -1 : 0;
 }
@@ -177,7 +185,6 @@ int shpUnload(SHPHandle *hShp, GEOSCoordSeq ***linearRingCsList,
    free(*linearRingList);
    *linearRingList = NULL;
 
-EXIT:
    return (isError != 0) ? -1 : 0;
 }
 
@@ -206,7 +213,7 @@ int isOnLand(SHPHandle *hShp, GEOSGeom **polygonList, double x, double y)
       if (bIsOnLand != 0)
          break;
           
-      bIsOnLand = GEOSContains((*polygonList)[i], point);
+      bIsOnLand = !GEOSDisjoint((*polygonList)[i], point);
    }  
    
    // destroying parent geom also destroys its child geoms & coord seq
@@ -216,3 +223,11 @@ int isOnLand(SHPHandle *hShp, GEOSGeom **polygonList, double x, double y)
    return bIsOnLand;
 }
 
+/*
+ * isOnWater: determines whether coordinate (x, y) is on water
+ * return: 1 if the coordinate is on water otherwise 0
+ */
+int isOnWater(SHPHandle *hShp, GEOSGeom **polygonList, double x, double y)
+{
+  return !isOnLand(hShp, polygonList, x, y);
+}

@@ -19,6 +19,7 @@ extern int shpLoad(SHPHandle *hShp, GEOSCoordSeq ***linearRingCsList,
 extern int shpUnload(SHPHandle *hShp, GEOSCoordSeq ***linearRingCsList,
    GEOSGeom ***linearRingList, GEOSGeom **polygonList);
 extern int isOnLand(SHPHandle *hShp, GEOSGeom **, double, double);
+extern int isOnWater(SHPHandle *hShp, GEOSGeom **, double, double);
 
 #endif // _GEOSPATIAL_H_
 
