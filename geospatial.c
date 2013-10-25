@@ -57,9 +57,7 @@ int GEOSPolygons_destroy(GEOSPolygons **polygons)
             GEOSGeom_destroy((*polygons)->polygonList[i]);
          }
          
-         free((*polygons)->polygonList[i]);
-         (*polygons)->polygonList[i] = NULL;
-          free((*polygons)->linearRingList[i]);
+         free((*polygons)->linearRingList[i]);
          (*polygons)->linearRingList[i] = NULL;
          free((*polygons)->linearRingCsList[i]);
          (*polygons)->linearRingCsList[i] = NULL;
