@@ -47,7 +47,7 @@ GEOSPolygons * GEOSPolygons_create(int nEntities)
  */
 int GEOSPolygons_destroy(GEOSPolygons **polygons)
 {
-   if (*polygons == NULL)
+   if (*polygons != NULL)
    {
       for (int i = 0; i < (*polygons)->numEntities; i++)
       {
@@ -55,26 +55,27 @@ int GEOSPolygons_destroy(GEOSPolygons **polygons)
          {
             // destroying the parent GEOSGeom also destroys the GEOSGeoms it owns
             GEOSGeom_destroy((*polygons)->polygonList[i]);
-            
-            free((*polygons)->polygonList[i]);
-            (*polygons)->polygonList[i] = NULL;
-            free((*polygons)->linearRingList[i]);
-            (*polygons)->linearRingList[i] = NULL;
-            free((*polygons)->linearRingCsList[i]);
-            (*polygons)->linearRingCsList[i] = NULL;
          }
-      }
+         
+         free((*polygons)->polygonList[i]);
+         (*polygons)->polygonList[i] = NULL;
+          free((*polygons)->linearRingList[i]);
+         (*polygons)->linearRingList[i] = NULL;
+         free((*polygons)->linearRingCsList[i]);
+         (*polygons)->linearRingCsList[i] = NULL;
 
-      free((*polygons)->linearRingList);
-      (*polygons)->linearRingList = NULL;
+      }
+      
       free((*polygons)->linearRingCsList);
       (*polygons)->linearRingCsList = NULL;
+      free((*polygons)->linearRingList);
+      (*polygons)->linearRingList = NULL;
       free((*polygons)->polygonList);
       (*polygons)->polygonList = NULL;
-      
-      free(*polygons);
-      *polygons = NULL;  
    }
+
+   free(*polygons);
+   *polygons = NULL;  
 
    return 0;
 }
@@ -182,7 +183,9 @@ int shpLoad(SHPHandle *hShp, GEOSPolygons **polygons)
          if (bufferCount > 10)
          {
             fprintf(stderr, "ERROR: polygon cannot be be saved by buffering; shapefile is not valid...\n");
+#if GEOS_MAJOR_VERSION == 3
             fprintf(stderr, "%s\n", GEOSisValidReason((*polygons)->polygonList[i]));
+#endif
             isError = 1;
             goto EXIT;
          }
