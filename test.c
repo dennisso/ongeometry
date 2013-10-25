@@ -4,33 +4,33 @@
 
 int tests_run = 0;
 
-static char * test_onland(SHPHandle *hShp, GEOSGeom **polygonList)
+static char * test_isOnPolygons(GEOSPolygons **polygons)
 {
-   mu_assert("error: (-96.82341, 58.137457) should be 1\n", isOnLand(hShp, polygonList, -96.82341, 58.137457));
-   mu_assert("error: (-109.26176, 70.585724) should be 1\n", isOnLand(hShp, polygonList, -109.26176, 70.585724));
-   mu_assert("error: (-130.211786, 68.559262) should be 1\n", isOnLand(hShp, polygonList, -130.211786, 68.559262));
-   mu_assert("error: (-47.609331, 65.085327) should be 1\n", isOnLand(hShp, polygonList, -47.609331, 65.085327));
-   mu_assert("error: (-56.19767, 48.487637) should be 1\n", isOnLand(hShp, polygonList, -56.19767, 48.487637));
-   mu_assert("error: (-79.646732, 37.969334) should be 1\n", isOnLand(hShp, polygonList, -79.646732, 37.969334));
+   mu_assert("error: (-96.82341, 58.137457) should be 1\n", isOnPolygons(polygons, -96.82341, 58.137457));
+   mu_assert("error: (-109.26176, 70.585724) should be 1\n", isOnPolygons(polygons, -109.26176, 70.585724));
+   mu_assert("error: (-130.211786, 68.559262) should be 1\n", isOnPolygons(polygons, -130.211786, 68.559262));
+   mu_assert("error: (-47.609331, 65.085327) should be 1\n", isOnPolygons(polygons, -47.609331, 65.085327));
+   mu_assert("error: (-56.19767, 48.487637) should be 1\n", isOnPolygons(polygons, -56.19767, 48.487637));
+   mu_assert("error: (-79.646732, 37.969334) should be 1\n", isOnPolygons(polygons, -79.646732, 37.969334));
 
    return 0;
 }
 
-static char * test_not_onland(SHPHandle *hShp, GEOSGeom **polygonList)
+static char * test_not_isOnPolygons(GEOSPolygons **polygons)
 {
-   mu_assert("error: (-86.305107, 59.391933) should be 0\n", !isOnLand(hShp, polygonList, -86.305107, 59.391933));
-   mu_assert("error: (-59.575107, 59.58493) should be 0\n", !isOnLand(hShp, polygonList, -59.575107, 59.58493));
-   mu_assert("error: (-91.51601, 71.45420) should be 0\n", !isOnLand(hShp, polygonList, -91.51601, 71.454207));
-   mu_assert("error: (-133.492724, 72.998179) should be 0\n", !isOnLand(hShp, polygonList, -133.492724, 72.998179));
-   mu_assert("error: (-50.986768, 57.654966) should be 0\n", !isOnLand(hShp, polygonList, -50.986768, 57.654966));
-   mu_assert("error: (-57.452147, 44.338215) should be 0\n", !isOnLand(hShp, polygonList, -57.452147, 44.338215));
-   mu_assert("error: (-86.787598, 42.890742) should be 0\n", !isOnLand(hShp, polygonList, -86.787598, 42.890742));
-   mu_assert("error: (-71.251389, 36.135868) should be 0\n", !isOnLand(hShp, polygonList, -71.251389, 36.135868));
+   mu_assert("error: (-86.305107, 59.391933) should be 0\n", !isOnPolygons(polygons, -86.305107, 59.391933));
+   mu_assert("error: (-59.575107, 59.58493) should be 0\n", !isOnPolygons(polygons, -59.575107, 59.58493));
+   mu_assert("error: (-91.51601, 71.45420) should be 0\n", !isOnPolygons(polygons, -91.51601, 71.454207));
+   mu_assert("error: (-133.492724, 72.998179) should be 0\n", !isOnPolygons(polygons, -133.492724, 72.998179));
+   mu_assert("error: (-50.986768, 57.654966) should be 0\n", !isOnPolygons(polygons, -50.986768, 57.654966));
+   mu_assert("error: (-57.452147, 44.338215) should be 0\n", !isOnPolygons(polygons, -57.452147, 44.338215));
+   mu_assert("error: (-86.787598, 42.890742) should be 0\n", !isOnPolygons(polygons, -86.787598, 42.890742));
+   mu_assert("error: (-71.251389, 36.135868) should be 0\n", !isOnPolygons(polygons, -71.251389, 36.135868));
 
    return 0;
 }
 
-static char * test_million_onland(SHPHandle *hShp, GEOSGeom **polygonList)
+static char * test_million_onland(GEOSPolygons **polygons)
 {
    time_t startTime, endTime;
    double seconds;
@@ -40,7 +40,7 @@ static char * test_million_onland(SHPHandle *hShp, GEOSGeom **polygonList)
    {
       for (int j = 0; j < 1000; j++)
       {
-         isOnLand(hShp, polygonList, i, j);  
+         isOnPolygons(polygons, i, j);  
       }
    }
    time(&endTime);
@@ -50,11 +50,11 @@ static char * test_million_onland(SHPHandle *hShp, GEOSGeom **polygonList)
    return 0;
 }
 
-static char * all_tests(SHPHandle *hShp, GEOSGeom **polygonList)
+static char * all_tests(GEOSPolygons **polygons)
 {
-   mu_run_test(test_onland(hShp, polygonList));
-   mu_run_test(test_not_onland(hShp, polygonList));
-   mu_run_test(test_million_onland(hShp, polygonList));
+   mu_run_test(test_isOnPolygons(polygons));
+   mu_run_test(test_not_isOnPolygons(polygons));
+   mu_run_test(test_million_onland(polygons));
    return 0;
 }
 
@@ -77,17 +77,16 @@ int main(int argc, char *argv[])
       
    initGEOS(notice, log_and_exit);   
    
-   GEOSCoordSeq **linearRingCsList;
-   GEOSGeom **linearRingList, *polygonList;
-
+   GEOSPolygons *polygons;
+    
    printf("loading...\n");
-   if(shpLoad(&hShp, &linearRingCsList, &linearRingList, &polygonList) != 0)
+   if(shpLoad(&hShp, &polygons) != 0)
    {
       printf("error: cannot load shapefile at %s\n", argv[1]);
       goto GC_GEOS;
    }
 
-   char *result = all_tests(&hShp, &polygonList);
+   char *result = all_tests(&polygons);
 
    if (result != 0)
       printf("%s\n", result);
@@ -98,7 +97,7 @@ int main(int argc, char *argv[])
 
 GC_GEOS:
    printf("unloading...\n");
-   shpUnload(&hShp, &linearRingCsList, &linearRingList, &polygonList);
+   shpUnload(&polygons);
 
    //printf("GEOS: %s\n", GEOSversion()); 
    finishGEOS();

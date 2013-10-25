@@ -23,6 +23,63 @@ void log_and_exit(const char *fmt, ...)
 }
 
 /*
+ * GEOSPolygons_create: initializes and allocates GEOM polygons
+ * return: a malloced polygon if successful otherwise NULL
+ */
+GEOSPolygons * GEOSPolygons_create(int nEntities)
+{
+   GEOSPolygons *polygons;
+
+   if ((polygons = malloc(sizeof(GEOSPolygons))) &&
+      (polygons->linearRingCsList = malloc(sizeof(GEOSCoordSeq *) * nEntities)) &&
+      (polygons->linearRingList = malloc(sizeof(GEOSGeom *) * nEntities)) &&
+      (polygons->polygonList = malloc(sizeof(GEOSGeom) * nEntities))
+      )
+   {
+      polygons->numEntities = nEntities;
+   }
+   return polygons;
+}
+
+/*
+ * GEOSPolygons_destroy: frees GEOMS polygons and its pointer
+ * return: 0 if successful otherwise -1
+ */
+int GEOSPolygons_destroy(GEOSPolygons **polygons)
+{
+   if (*polygons == NULL)
+   {
+      for (int i = 0; i < (*polygons)->numEntities; i++)
+      {
+         if ((*polygons)->polygonList[i] != NULL)
+         {
+            // destroying the parent GEOSGeom also destroys the GEOSGeoms it owns
+            GEOSGeom_destroy((*polygons)->polygonList[i]);
+            
+            free((*polygons)->polygonList[i]);
+            (*polygons)->polygonList[i] = NULL;
+            free((*polygons)->linearRingList[i]);
+            (*polygons)->linearRingList[i] = NULL;
+            free((*polygons)->linearRingCsList[i]);
+            (*polygons)->linearRingCsList[i] = NULL;
+         }
+      }
+
+      free((*polygons)->linearRingList);
+      (*polygons)->linearRingList = NULL;
+      free((*polygons)->linearRingCsList);
+      (*polygons)->linearRingCsList = NULL;
+      free((*polygons)->polygonList);
+      (*polygons)->polygonList = NULL;
+      
+      free(*polygons);
+      *polygons = NULL;  
+   }
+
+   return 0;
+}
+
+/*
  * shpOpen: read shapefile using shapelib
  * returns: 0 if it succeeds otherwise -1
  */
@@ -66,8 +123,7 @@ EXIT:
  * shpLoad: load shapefile to memory as polygons
  * return: 0 if successful otherwise -1
  */
-int shpLoad(SHPHandle *hShp, GEOSCoordSeq ***linearRingCsList,
-   GEOSGeom ***linearRingList, GEOSGeom **polygonList)
+int shpLoad(SHPHandle *hShp, GEOSPolygons **polygons)
 {
    int isError = 0;
    int nShapeType, nEntities;
@@ -76,11 +132,9 @@ int shpLoad(SHPHandle *hShp, GEOSCoordSeq ***linearRingCsList,
    
    SHPGetInfo(*hShp, &nEntities, &nShapeType, adfMinBound, adfMaxBound );
    
-   // allocate memory for point indices for 2D jagged array
-   *linearRingCsList = malloc(sizeof(GEOSCoordSeq *) * nEntities);
-   *linearRingList = malloc(sizeof(GEOSGeom *) * nEntities);
-   *polygonList = malloc(sizeof(GEOSGeom) * nEntities);
-   
+   // allocate memory for polygons
+   *polygons = GEOSPolygons_create(nEntities);
+  
    for (int i = 0; i < nEntities; i++)
    {
       psShape = SHPReadObject(*hShp, i);
@@ -97,47 +151,47 @@ int shpLoad(SHPHandle *hShp, GEOSCoordSeq ***linearRingCsList,
       //   psShape->nVertices, psShape->nParts);
       
       // allocate 
-      (*linearRingCsList)[i] = malloc(sizeof(GEOSCoordSeq) * psShape->nParts);
-      (*linearRingList)[i] = malloc(sizeof(GEOSGeom) * psShape->nParts);
+      (*polygons)->linearRingCsList[i] = malloc(sizeof(GEOSCoordSeq) * psShape->nParts);
+      (*polygons)->linearRingList[i] = malloc(sizeof(GEOSGeom) * psShape->nParts);
 
       for (int j = 0; j < psShape->nParts; j++)
       {
          unsigned int startIdx = psShape->panPartStart[j];
          unsigned int endIdx = (j != psShape->nParts - 1) ? psShape->panPartStart[j + 1] : psShape->nVertices; 
-         (*linearRingCsList)[i][j] = GEOSCoordSeq_create(endIdx - startIdx, 2);
+         (*polygons)->linearRingCsList[i][j] = GEOSCoordSeq_create(endIdx - startIdx, 2);
          
          for (unsigned int k = startIdx; k < endIdx; k++)
          {
-            GEOSCoordSeq_setX((*linearRingCsList)[i][j], k - startIdx, psShape->padfX[k]);
-            GEOSCoordSeq_setY((*linearRingCsList)[i][j], k - startIdx, psShape->padfY[k]);
+            GEOSCoordSeq_setX((*polygons)->linearRingCsList[i][j], k - startIdx, psShape->padfX[k]);
+            GEOSCoordSeq_setY((*polygons)->linearRingCsList[i][j], k - startIdx, psShape->padfY[k]);
          }
          
-         (*linearRingList)[i][j] = GEOSGeom_createLinearRing((*linearRingCsList)[i][j]);
+         (*polygons)->linearRingList[i][j] = GEOSGeom_createLinearRing((*polygons)->linearRingCsList[i][j]);
          
-         //char *wkt_c = GEOSGeomToWKT((*linearRingList)[i][j]);
+         //char *wkt_c = GEOSGeomToWKT((*polygons)->linearRingList[i][j]);
          //printf("[%d][%d]: %s\n", i, j, wkt_c);
       }
 
-      (*polygonList)[i]  = GEOSGeom_createPolygon(
-         (*linearRingList)[i][0], &(*linearRingList)[i][1], psShape->nParts - 1);
+      (*polygons)->polygonList[i]  = GEOSGeom_createPolygon(
+         (*polygons)->linearRingList[i][0], &((*polygons)->linearRingList[i][1]), psShape->nParts - 1);
 
       int bufferCount = 0;
 
-      while (!GEOSisValid((*polygonList)[i]))
+      while (!GEOSisValid((*polygons)->polygonList[i]))
       {
          if (bufferCount > 10)
          {
             fprintf(stderr, "ERROR: polygon cannot be be saved by buffering; shapefile is not valid...\n");
-            fprintf(stderr, "%s\n", GEOSisValidReason((*polygonList)[i]));
+            fprintf(stderr, "%s\n", GEOSisValidReason((*polygons)->polygonList[i]));
             isError = 1;
             goto EXIT;
          }
          
          printf("NOTICE: buffer invalid polygon using a width=0.0 and quad_seg=8; iteration: %d\n", bufferCount + 1);
-         (*polygonList)[i] = GEOSBuffer((*polygonList)[i], 0.0, 8);
+         (*polygons)->polygonList[i] = GEOSBuffer((*polygons)->polygonList[i], 0.0, 8);
       }
 
-      //char *wkt_c = GEOSGeomToWKT(polygonList[i]);
+      //char *wkt_c = GEOSGeomToWKT((*polygons)->polygonList[i]);
       //printf("%s\n", wkt_c);
 
       // destroy shapefile obj; frees its pointer
@@ -152,54 +206,23 @@ EXIT:
  * shpUnload: Unload shapefile to memory as polygons
  * return: 0 if successful otherwise -1
  */
-int shpUnload(SHPHandle *hShp, GEOSCoordSeq ***linearRingCsList,
-   GEOSGeom ***linearRingList, GEOSGeom **polygonList)
+int shpUnload(GEOSPolygons **polygons)
 {
    int isError = 0;
-   int nShapeType, nEntities;
-   double adfMinBound[4], adfMaxBound[4];
-
-   SHPGetInfo(*hShp, &nEntities, &nShapeType, adfMinBound, adfMaxBound );
-
-   for (int i = 0; i < nEntities; i++)
-   {
-      // destroying parent geom also destroys its child geoms & coord seq
-      // that's how libgeos works
-      if ((*polygonList)[i])
-      {
-         //printf("freeing polygon[%d]...\n", i);
-         GEOSGeom_destroy((*polygonList)[i]);
-      }
-
-      free((*linearRingCsList)[i]);
-      (*linearRingCsList)[i] = NULL; 
-      free((*linearRingList)[i]);
-      (*linearRingList)[i] = NULL;
-   }
-
-   // free the libgeos pointers
-   free(*polygonList);
-   *polygonList  = NULL;
-   free(*linearRingCsList);
-   *linearRingCsList = NULL;
-   free(*linearRingList);
-   *linearRingList = NULL;
-
+  
+   GEOSPolygons_destroy(polygons);
+   
    return (isError != 0) ? -1 : 0;
 }
 
 /*
- * isOnLand: determines whether coordinate (x, y) is on land
+ * isOnPolygons: determines whether coordinate (x, y) is on land
  * returns: 1 if the coordinate is on land otherwise 0
  */
-int isOnLand(SHPHandle *hShp, GEOSGeom **polygonList, double x, double y)
+int isOnPolygons(GEOSPolygons **polygons, double x, double y)
 {
    int bIsOnLand = 0;
-   int nShapeType, nEntities;
-   double adfMinBound[4], adfMaxBound[4];
-
-   SHPGetInfo(*hShp, &nEntities, &nShapeType, adfMinBound, adfMaxBound );
-
+   
    GEOSCoordSeq pointCs;
    GEOSGeom point;
 
@@ -207,13 +230,13 @@ int isOnLand(SHPHandle *hShp, GEOSGeom **polygonList, double x, double y)
    GEOSCoordSeq_setX(pointCs, 0, x);
    GEOSCoordSeq_setY(pointCs, 0, y); 
    point = GEOSGeom_createPoint(pointCs);
-
-   for (int i = 0; i < nEntities; i++)
+   
+   for (int i = 0; i < (*polygons)->numEntities; i++)
    {
       if (bIsOnLand != 0)
          break;
-          
-      bIsOnLand = !GEOSDisjoint((*polygonList)[i], point);
+      
+      bIsOnLand = !GEOSContains((*polygons)->polygonList[i], point);
    }  
    
    // destroying parent geom also destroys its child geoms & coord seq
@@ -223,11 +246,3 @@ int isOnLand(SHPHandle *hShp, GEOSGeom **polygonList, double x, double y)
    return bIsOnLand;
 }
 
-/*
- * isOnWater: determines whether coordinate (x, y) is on water
- * return: 1 if the coordinate is on water otherwise 0
- */
-int isOnWater(SHPHandle *hShp, GEOSGeom **polygonList, double x, double y)
-{
-  return !isOnLand(hShp, polygonList, x, y);
-}

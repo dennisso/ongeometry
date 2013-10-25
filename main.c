@@ -19,11 +19,10 @@ int main(int argc, char *argv[])
       
    initGEOS(notice, log_and_exit);   
 
-   GEOSCoordSeq **linearRingCsList;
-   GEOSGeom **linearRingList, *polygonList;
+   GEOSPolygons *polygons;
 
    printf("loading...\n");
-   result = shpLoad(&hShp, &linearRingCsList, &linearRingList, &polygonList); 
+   result = shpLoad(&hShp, &polygons); 
    if (result != 0)
    {  
       printf("loading failed...\n");
@@ -33,11 +32,11 @@ int main(int argc, char *argv[])
    x = atof(argv[2]);
    y = atof(argv[3]); 
    
-   printf("%d\n", isOnLand(&hShp, &polygonList, x, y));
+   printf("%d\n", isOnPolygons(&polygons, x, y));
 
 GC_GEOS:
    printf("unloading...\n");
-   shpUnload(&hShp, &linearRingCsList, &linearRingList, &polygonList);
+   shpUnload(&polygons);
 
    //printf("GEOS: %s\n", GEOSversion()); 
    finishGEOS();
