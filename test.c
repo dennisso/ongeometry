@@ -1,4 +1,5 @@
 #include <geospatial.h>
+#include <rasterize.h>
 #include <minunit.h>
 #include <time.h>
 
@@ -50,11 +51,58 @@ static char * test_million_onland(GEOSPolygons **polygons)
    return 0;
 }
 
+static char * test_rasterize(GEOSPolygons **polygons)
+{
+   int width = 2704, height = 3040;
+   double minLong = -111.306918, minLat = 69.765171,
+      maxLong = -95.724294, maxLat = 75.620499;
+   
+   GEOSPolygonRaster *polyRaster;
+   GEOSConversionTable *xTable, *yTable;
+
+   xTable = GEOSConversionTable_create(minLong, maxLong, width);
+   yTable = GEOSConversionTable_create(minLat, maxLat, height);
+   polyRaster = GEOSPolygonRaster_create(width, height);
+
+   GEOSPolygon_rasterize(&polyRaster, &((*polygons)->polygonList[0]), &xTable, &yTable);
+    
+   return 0;
+}
+
+static char * test_GEOSConversionTable(void)
+{
+   int width = 2704, height = 3040;
+   double minLong = -111.306918, minLat = 69.765171,
+      maxLong = -95.724294, maxLat = 75.620499;
+   
+   GEOSConversionTable *xTable, *yTable;
+
+   xTable = GEOSConversionTable_create(minLong, maxLong, width);
+   yTable = GEOSConversionTable_create(minLat, maxLat, height);
+
+   for (int original_int = 0; original_int < height; original_int++)
+   {
+      int result_int;
+      double result_double;
+      result_double = GEOSConvertFrom(xTable, original_int);
+      result_int = GEOSConvertTo(xTable, result_double);
+      mu_assert("error: x conversion not circular\n", (result_int - original_int) < 0.000001);
+   
+
+      result_double = GEOSConvertFrom(yTable, original_int);
+      result_int = GEOSConvertTo(yTable, result_double);
+      mu_assert("error: y conversion not circular\n", (result_int - original_int) < 0.000001);
+   }
+   return 0;
+}
+
 static char * all_tests(GEOSPolygons **polygons)
 {
    mu_run_test(test_isOnPolygons(polygons));
    mu_run_test(test_not_isOnPolygons(polygons));
    mu_run_test(test_million_onland(polygons));
+   mu_run_test(test_rasterize(polygons));
+   mu_run_test(test_GEOSConversionTable());
    return 0;
 }
 

@@ -6,7 +6,11 @@
 #include <stdarg.h>
 
 #include <shapefil.h>
+
+#ifndef _GEOS_C_H_
+#define _GEOS_C_H_
 #include <geos_c.h>
+#endif
 
 // public strucs
 
