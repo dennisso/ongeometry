@@ -29,8 +29,8 @@ double GEOSConvertFrom (GEOSConversionTable *, int);
 
 GEOSPolygonRaster * GEOSPolygonRaster_create(int, int);
 int GEOSPolygonRaster_destroy(GEOSPolygonRaster *);
-int GEOSPolygon_rasterize(GEOSPolygonRaster *, GEOSGeom *,
-   GEOSConversionTable *, GEOSConversionTable *);
+int GEOSPolygon_rasterize(GEOSPolygonRaster **, GEOSGeom *,
+   GEOSConversionTable **, GEOSConversionTable **);
 
 #endif //_RASTERIZE_H_
 
