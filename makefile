@@ -3,8 +3,9 @@
 # As of 2013 Sept 27, the broken gcc has been removed
 # CC has been changed back to gcc
 
-SRC = main.c geospatial.c
-SRC_TEST = test.c geospatial.c
+DEP_SRC = geospatial.c rasterize.c
+SRC = main.c $(DEP_SRC)
+SRC_TEST = test.c $(DEP_SRC)
 OBJ = $(SRC:.c=.o)
 OBJ_TEST = $(SRC_TEST:.c=.o)
 OUT = onland
