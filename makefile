@@ -30,7 +30,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $<
 
 $(OUT): $(OBJ_LIB) $(OBJ_DIR)/main.o
-	$(CC) -o $@ $^ $(LIBS)\
+	$(CC) -o $@ $^ $(LIBS)
    
 test_all: $(OBJ_LIB) $(OBJ_DIR)/test.o
 	$(CC) -o bin/test $^ $(LIBS)
