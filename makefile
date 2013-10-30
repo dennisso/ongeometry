@@ -23,10 +23,10 @@ LIBS=-lgeos_c -Llib -lshp
 
 all: clean $(OUT) test_all
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/lib/%.c 
+$(OBJ_DIR)/%.o: $(SRC_DIR)/lib/%.c mkdir_all
 	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $<
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c 
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c mkdir_all
 	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $<
 
 $(OUT): $(OBJ_LIB) $(OBJ_DIR)/main.o
@@ -35,6 +35,8 @@ $(OUT): $(OBJ_LIB) $(OBJ_DIR)/main.o
 test_all: $(OBJ_LIB) $(OBJ_DIR)/test.o
 	$(CC) -o bin/test $^ $(LIBS)
 
-clean:
-	rm -f $(OBJ_DIR)/*.o $(OUT_DIR)/* 
+mkdir_all:
+	mkdir -p {$(OBJ_DIR),$(OUT_DIR)}
 
+clean:
+	rm -f $(OBJ_DIR)/*.o $(OUT_DIR)/*
