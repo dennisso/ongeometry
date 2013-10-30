@@ -1,7 +1,6 @@
 #ifndef _RASTERIZE_H_
 #define _RASTERIZE_H_ 1
 
-#include <geospatial.h>
 #include <string.h>
 #include <math.h>
 

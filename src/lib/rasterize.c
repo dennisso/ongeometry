@@ -1,4 +1,4 @@
-#include <rasterize.h>
+#include <geospatial.h>
 
 // function declarations
 int GEOSPolygonRaster_set(GEOSPolygonRaster **, int, int);

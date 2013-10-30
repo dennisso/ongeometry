@@ -3,13 +3,17 @@
 # As of 2013 Sept 27, the broken gcc has been removed
 # CC has been changed back to gcc
 
-DEP_SRC = geospatial.c rasterize.c
-SRC = main.c $(DEP_SRC)
-SRC_TEST = test.c $(DEP_SRC)
-OBJ = $(SRC:.c=.o)
-OBJ_TEST = $(SRC_TEST:.c=.o)
-OUT = onland
-OUT_TEST = test
+TARGET=OnGeometry
+
+SRC_DIR=src
+OBJ_DIR=obj
+OUT_DIR=bin
+
+SRC_LIB = $(wildcard $(SRC_DIR)/lib/*.c) 
+OBJ_LIB = $(addprefix $(OBJ_DIR)/,$(notdir $(SRC_LIB:.c=.o)))
+SRC = $(wildcard $(SRC_DIR)/*.c) 
+OBJ = $(addprefix $(OBJ_DIR)/,$(notdir $(SRC:.c=.o)))
+OUT = $(OUT_DIR)/$(TARGET)
 
 INCLUDES =-Iinclude
 
@@ -17,30 +21,20 @@ CFLAGS=-Wall -std=c99 -g
 CC=gcc
 LIBS=-lgeos_c -Llib -lshp
 
-.SUFFIXES: .c
+all: clean $(OUT) test_all
 
-all: clean dep $(OUT) $(OUT_TEST)
+$(OBJ_DIR)/%.o: $(SRC_DIR)/lib/%.c 
+	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $<
 
-test_all: dep_test $(OUT_TEST)
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c 
+	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $<
 
-.c.o:
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
-
-$(OUT): $(OBJ)
-	$(CC) $(OBJ) -o $(OUT) $(LIBS)
-
-$(OUT_TEST): $(OBJ_TEST)
-	$(CC) $(OBJ_TEST) -o $(OUT_TEST) $(LIBS)
-
-depend: dep
-
-dep:
-	$(CC) $(CFLAGS) $(INCLUDES) -c $(SRC)
-
-dep_test:
-	$(CC) $(CFLAGS) $(INCLUDES) -c $(SRC_TEST)
+$(OUT): $(OBJ_LIB) $(OBJ_DIR)/main.o
+	$(CC) -o $@ $^ $(LIBS)\
+   
+test_all: $(OBJ_LIB) $(OBJ_DIR)/test.o
+	$(CC) -o bin/test $^ $(LIBS)
 
 clean:
-	rm -f $(OBJ) $(OUT) $(OBJ_TEST) $(OUT_TEST)
-
+	rm -f $(OBJ_DIR)/*.o $(OUT_DIR)/* 
 

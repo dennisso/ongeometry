@@ -1,5 +1,4 @@
 #include <geospatial.h>
-#include <rasterize.h>
 
 void notice(const char *fmt, ...)
 {
