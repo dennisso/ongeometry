@@ -33,7 +33,8 @@ GEOSPolygons * GEOSPolygons_create(int nEntities)
    if ((polygons = malloc(sizeof(GEOSPolygons))) &&
       (polygons->linearRingCsList = malloc(sizeof(GEOSCoordSeq *) * nEntities)) &&
       (polygons->linearRingList = malloc(sizeof(GEOSGeom *) * nEntities)) &&
-      (polygons->polygonList = malloc(sizeof(GEOSGeom) * nEntities))
+      (polygons->polygonList = malloc(sizeof(GEOSGeom) * nEntities)) &&
+      (polygons->geomCollection = malloc(sizeof(GEOSGeom)))
       )
    {
       polygons->numEntities = nEntities;
@@ -49,13 +50,15 @@ int GEOSPolygons_destroy(GEOSPolygons **polygons)
 {
    if (*polygons != NULL)
    {
+      GEOSGeom_destroy((*polygons)->geomCollection);
+
       for (int i = 0; i < (*polygons)->numEntities; i++)
       {
-         if ((*polygons)->polygonList[i] != NULL)
-         {
-            // destroying the parent GEOSGeom also destroys the GEOSGeoms it owns
-            GEOSGeom_destroy((*polygons)->polygonList[i]);
-         }
+         //if ((*polygons)->polygonList[i] != NULL)
+         //{
+         //   // destroying the parent GEOSGeom also destroys the GEOSGeoms it owns
+         //   GEOSGeom_destroy((*polygons)->polygonList[i]);
+         //}
          
          free((*polygons)->linearRingList[i]);
          (*polygons)->linearRingList[i] = NULL;
@@ -198,6 +201,10 @@ int shpLoad(SHPHandle *hShp, GEOSPolygons **polygons)
       // destroy shapefile obj; frees its pointer
       SHPDestroyObject(psShape);
    }
+
+   printf("creating collection...\n");
+   (*polygons)->geomCollection = GEOSGeom_createCollection(GEOS_MULTIPOLYGON,
+      (*polygons)->polygonList, nEntities);
 
 EXIT:
    return (isError != 0) ? -1 : 0;

@@ -16,7 +16,7 @@
 typedef struct {
    int numEntities;
    GEOSCoordSeq **linearRingCsList;
-   GEOSGeom **linearRingList, *polygonList;
+   GEOSGeom **linearRingList, *polygonList, geomCollection;
 } GEOSPolygons; 
 
 // public fcn prototypes
