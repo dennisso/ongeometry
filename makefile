@@ -36,7 +36,7 @@ test_all: $(OBJ_LIB) $(OBJ_DIR)/test.o
 	$(CC) -o bin/test $^ $(LIBS)
 
 mkdir_all:
-	mkdir -p {$(OBJ_DIR),$(OUT_DIR)}
+	bash -c "mkdir -p {$(OBJ_DIR),$(OUT_DIR)}"
 
 clean:
 	rm -f $(OBJ_DIR)/*.o $(OUT_DIR)/*
