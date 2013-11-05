@@ -1,11 +1,13 @@
 #ifndef _MINUNIT_H_
 #define _MINUNIT_H_
 
-/* MinUnit: A minimal unit testing framework for C
- * www.jera.com/techinfo/jtns/jtn002.html
- * Modified by Dennis So
- * Supports arguments in the test
+/* 
+ * MinUnit: A minimal unit testing framework for C
+ * Forked: www.jera.com/techinfo/jtns/jtn002.html
+ * Dennis So
  */
+
+#define MINUNIT_VERSION 0.0.1
 
 #define mu_assert(message, test) do { \
    if (!(test)) return message; } while (0)

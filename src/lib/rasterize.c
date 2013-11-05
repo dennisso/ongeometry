@@ -3,6 +3,10 @@
 // function declarations
 int GEOSPolygonRaster_set(GEOSPolygonRaster **, int, int);
 
+/*	
+ *	GEOSConversionTable_create: allocates and creates a conversation table
+ * returns: GEOSConversionTable if successful otherwise NULL
+ */
 GEOSConversionTable * GEOSConversionTable_create(double min, double max,
    int division)
 {
@@ -18,6 +22,10 @@ GEOSConversionTable * GEOSConversionTable_create(double min, double max,
    return convTable;
 }
 
+/*
+ * GEOSConversionTable_destroy: free the conversion table
+ * returns: 0
+ */
 int GEOSConversionTable_destroy(GEOSConversionTable *convTable)
 {
    free(convTable);
@@ -26,18 +34,30 @@ int GEOSConversionTable_destroy(GEOSConversionTable *convTable)
    return 0;
 }
 
+/*
+ * GEOSConvertTo: Converts the given
+ * returns: result of the conversion
+ */
 int GEOSConvertTo (GEOSConversionTable *convTable, double value)
 {
    return (int) floor((double) (value - convTable->min) / (convTable->max - convTable->min)
       * (double) convTable->division + 0.5);
 }
 
+/*
+ * GEOSConvertFrom: Reverses the conversion
+ * returns: results of the reverse conversion 
+ */
 double GEOSConvertFrom (GEOSConversionTable *convTable, int value)
 {
    return (double) (value * (convTable->max - convTable->min)
       / (double) convTable->division) + (double) convTable->min;
 }
 
+/*
+ * GEOSPolygonRaster_create: allocs and creates a rectangular raster
+ * returns: pointer to raster if sucessful otherwise NULL
+ */
 GEOSPolygonRaster * GEOSPolygonRaster_create(int width, int height)
 {
    GEOSPolygonRaster *polyRaster;
@@ -56,6 +76,11 @@ GEOSPolygonRaster * GEOSPolygonRaster_create(int width, int height)
 
    return polyRaster;
 }
+
+/*
+ * GEOSPolygonRaster_destroy: destroy raster and free the pointer
+ * returns: 0
+ */
 int GEOSPolygonRaster_destroy(GEOSPolygonRaster *polyRaster)
 {
    for(int row = 0; row < polyRaster->height; row++)
@@ -70,6 +95,10 @@ int GEOSPolygonRaster_destroy(GEOSPolygonRaster *polyRaster)
    return 0;
 }
 
+/*
+ * GEOSPolygon_rasterize: rasterized a GEOSGeom
+ * returns: 0
+ */
 int GEOSPolygon_rasterize(GEOSPolygonRaster **polyRaster, GEOSGeom *geom,
    GEOSConversionTable **xConvTable, GEOSConversionTable **yConvTable)
 {
@@ -94,13 +123,14 @@ int GEOSPolygon_rasterize(GEOSPolygonRaster **polyRaster, GEOSGeom *geom,
 
       intersected = GEOSIntersection(multiline, *geom);
       
-      //char *wkt_c = GEOSGeomToWKT(multiline);
-      //printf("%s\n", wkt_c);
-      //wkt_c = GEOSGeomToWKT(intersected);
-      //printf("%s\n", wkt_c);
+      debug_run(char *wkt_c = GEOSGeomToWKT(multiline);)
+		debug_printf("%s\n", wkt_c)
+      debug_run(wkt_c = GEOSGeomToWKT(intersected);)
+      debug_printf("%s\n", wkt_c)
 
-      printf("Parsing %d lines\n", GEOSGetNumGeometries(intersected));
-      for(int lineNum = 0; lineNum < GEOSGetNumGeometries(intersected); lineNum++)
+      debug_printf("Parsing %d lines\n", GEOSGetNumGeometries(intersected))
+      
+		for(int lineNum = 0; lineNum < GEOSGetNumGeometries(intersected); lineNum++)
       {
          double vertex[2][2];
          int index[2][2];
@@ -122,10 +152,10 @@ int GEOSPolygon_rasterize(GEOSPolygonRaster **polyRaster, GEOSGeom *geom,
             index[1][0] = GEOSConvertTo((*yConvTable), vertex[1][0]);
           
             //printf("P1 (%f, %f); P2 (%f, %f)\n",
-            //   vertex[0][0], vertex[0][1], vertex[1][0], vertex[1][1]);
+            //	vertex[0][0], vertex[0][1], vertex[1][0], vertex[1][1]);
 
             //printf("Line %d: P1 (%d, %d); P2 (%d, %d)\n",
-            //   lineNum, index[0][0], index[0][1], index[1][0], index[1][1]);
+            //	lineNum, index[0][0], index[0][1], index[1][0], index[1][1]);
                       
             for (int col = index[0][1]; col < index[1][1]; col++)
             {
@@ -134,7 +164,7 @@ int GEOSPolygon_rasterize(GEOSPolygonRaster **polyRaster, GEOSGeom *geom,
          }
          else
          {
-            printf("%d line has more than 2 coordinates\n", lineNum);
+            warn_printf("%d line has more than 2 coordinates\n", lineNum)
             GEOSCoordSeq_getX(lineCs, 0, &vertex[0][1]); //X is column
             GEOSCoordSeq_getY(lineCs, 0, &vertex[0][0]); //Y is row
             index[0][1] = GEOSConvertTo((*xConvTable), vertex[0][1]);
@@ -158,11 +188,11 @@ int GEOSPolygon_rasterize(GEOSPolygonRaster **polyRaster, GEOSGeom *geom,
 
 int GEOSPolygonRaster_set(GEOSPolygonRaster **polyRaster, int col, int row)
 {
-   if (col < 0 || col > (*polyRaster)->width)
-      printf("NOTICE: raster[%d][%d] - col index out of range\n", row, col);
-   
-   if (row < 0 || row > (*polyRaster)->height)
-      printf("NOTICE: raster[%d][%d] - row indecol out of range\n", row, col);
+   //if (col < 0 || col > (*polyRaster)->width)
+   //	warn_printf("raster[%d][%d] - col index out of range\n", row, col)
+   // 
+   //if (row < 0 || row > (*polyRaster)->height)
+   //	warn_printf("raster[%d][%d] - row index out of range\n", row, col)
    
    col = (col < 0) ? 0 : col;
    col = (col > (*polyRaster)->width) ? (*polyRaster)->width : col;

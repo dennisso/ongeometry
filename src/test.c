@@ -46,7 +46,7 @@ static char * test_million_onland(GEOSPolygons **polygons)
    }
    time(&endTime);
    seconds = difftime(endTime, startTime);
-   printf("%.f seconds elapsed over 1m calls\n", seconds);
+   info_printf("%.f seconds elapsed over 1m calls\n", seconds)
    
    return 0;
 }
@@ -112,25 +112,25 @@ int main(int argc, char *argv[])
    
    if (argc < 2)
    {
-      printf("Usage: test <shapefile path>\n");
+      error_printf("Usage: test <shapefile path>\n")
       goto EXIT;
    }
 
    // if it does not return 0, it's an error
    if (shpOpen(&hShp, argv[1]) != 0)
    {
-      printf("error: cannot open shapefile at %s\n", argv[1]);
-      goto GC_SHP;
+      error_printf("cannot open shapefile at %s\n", argv[1])
+		goto GC_SHP;
    }
       
    initGEOS(notice, log_and_exit);   
    
    GEOSPolygons *polygons;
     
-   printf("loading...\n");
+   info_printf("loading...\n")
    if(shpLoad(&hShp, &polygons) != 0)
    {
-      printf("error: cannot load shapefile at %s\n", argv[1]);
+      error_printf("cannot load shapefile at %s\n", argv[1])
       goto GC_GEOS;
    }
 
@@ -139,12 +139,12 @@ int main(int argc, char *argv[])
    if (result != 0)
       printf("%s\n", result);
    else
-      printf("Tests pass\n");
+      info_printf("Tests pass\n")
 
-   printf("Tests run: %d\n", tests_run);
+   info_printf("Tests run: %d\n", tests_run)
 
 GC_GEOS:
-   printf("unloading...\n");
+   info_printf("unloading...\n")
    shpUnload(&polygons);
 
    //printf("GEOS: %s\n", GEOSversion()); 

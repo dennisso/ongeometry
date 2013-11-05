@@ -1,5 +1,10 @@
 #include <geospatial.h>
 
+/*
+ * notice: logging functions for GEOS
+ * return: none
+ * note: DO NOT DELETE. GEOS library requires this
+ */
 void notice(const char *fmt, ...)
 {
    va_list ap;
@@ -11,6 +16,10 @@ void notice(const char *fmt, ...)
    fprintf(stdout, "\n");
 }
 
+/* log_and_exit: logging functions for GEOS
+ * return: none:
+ * note: DO NOT DELETE. GEOS library requires this
+ */
 void log_and_exit(const char *fmt, ...)
 {
    va_list ap;
@@ -44,22 +53,17 @@ GEOSPolygons * GEOSPolygons_create(int nEntities)
 
 /*
  * GEOSPolygons_destroy: frees GEOMS polygons and its pointer
- * return: 0 if successful otherwise -1
+ * return: 0
  */
 int GEOSPolygons_destroy(GEOSPolygons **polygons)
 {
    if (*polygons != NULL)
    {
+		// destroy the collection will destroy child geoms
       GEOSGeom_destroy((*polygons)->geomCollection);
 
       for (int i = 0; i < (*polygons)->numEntities; i++)
       {
-         //if ((*polygons)->polygonList[i] != NULL)
-         //{
-         //   // destroying the parent GEOSGeom also destroys the GEOSGeoms it owns
-         //   GEOSGeom_destroy((*polygons)->polygonList[i]);
-         //}
-         
          free((*polygons)->linearRingList[i]);
          (*polygons)->linearRingList[i] = NULL;
          free((*polygons)->linearRingCsList[i]);
@@ -102,11 +106,11 @@ int shpOpen(SHPHandle *hShp, char *path)
 
    SHPGetInfo(*hShp, &nEntities, &nShapeType, adfMinBound, adfMaxBound );
    
-   /*
-   printf("Shapefile Type: %s   # of Shapes: %d\n\n",
-      SHPTypeName(nShapeType), nEntities);
+   
+   debug_printf("Shapefile Type: %s   # of Shapes: %d\n\n",
+      SHPTypeName(nShapeType), nEntities)
     
-   printf("File Bounds: (%.15g,%.15g,%.15g,%.15g)\n"
+   debug_printf("File Bounds: (%.15g,%.15g,%.15g,%.15g)\n"
       "         to  (%.15g,%.15g,%.15g,%.15g)\n",
       adfMinBound[0], 
       adfMinBound[1], 
@@ -115,8 +119,7 @@ int shpOpen(SHPHandle *hShp, char *path)
       adfMaxBound[0], 
       adfMaxBound[1], 
       adfMaxBound[2], 
-      adfMaxBound[3]);
-   */
+      adfMaxBound[3])
 EXIT:
    return (isError != 0) ? -1 : 0;
 }
@@ -148,9 +151,9 @@ int shpLoad(SHPHandle *hShp, GEOSPolygons **polygons)
          goto EXIT;
       }
       
-      //printf("Shape:%d (%s) nVertices=%d nParts=%d\n",
-      //   i, SHPTypeName(psShape->nSHPType),
-      //   psShape->nVertices, psShape->nParts);
+      debug_printf("Shape:%d (%s) nVertices=%d nParts=%d\n",
+         i, SHPTypeName(psShape->nSHPType),
+         psShape->nVertices, psShape->nParts)
       
       // allocate 
       (*polygons)->linearRingCsList[i] = malloc(sizeof(GEOSCoordSeq) * psShape->nParts);
@@ -170,8 +173,8 @@ int shpLoad(SHPHandle *hShp, GEOSPolygons **polygons)
          
          (*polygons)->linearRingList[i][j] = GEOSGeom_createLinearRing((*polygons)->linearRingCsList[i][j]);
          
-         //char *wkt_c = GEOSGeomToWKT((*polygons)->linearRingList[i][j]);
-         //printf("[%d][%d]: %s\n", i, j, wkt_c);
+         debug_run(char *wkt_c = GEOSGeomToWKT((*polygons)->linearRingList[i][j]);)
+         debug_printf("[%d][%d]: %s\n", i, j, wkt_c)
       }
 
       (*polygons)->polygonList[i]  = GEOSGeom_createPolygon(
@@ -183,26 +186,27 @@ int shpLoad(SHPHandle *hShp, GEOSPolygons **polygons)
       {
          if (bufferCount > 10)
          {
-            fprintf(stderr, "ERROR: polygon cannot be be saved by buffering; shapefile is not valid...\n");
+            error_printf("polygon cannot be be saved by buffering; shapefile is not valid...\n");
 #if GEOS_MAJOR_VERSION == 3
-            fprintf(stderr, "%s\n", GEOSisValidReason((*polygons)->polygonList[i]));
+            error_printf("%s\n", GEOSisValidReason((*polygons)->polygonList[i]));
 #endif
             isError = 1;
             goto EXIT;
          }
          
-         printf("NOTICE: buffer invalid polygon using a width=0.0 and quad_seg=8; iteration: %d\n", bufferCount + 1);
+         warn_printf("buffer invalid polygon using a width=0.0 and quad_seg=8; iteration: %d\n",
+				bufferCount + 1);
          (*polygons)->polygonList[i] = GEOSBuffer((*polygons)->polygonList[i], 0.0, 8);
       }
 
-      //char *wkt_c = GEOSGeomToWKT((*polygons)->polygonList[i]);
-      //printf("%s\n", wkt_c);
+      debug_run(char *wkt_c = GEOSGeomToWKT((*polygons)->polygonList[i]);)
+      debug_printf("%s\n", wkt_c)
 
       // destroy shapefile obj; frees its pointer
       SHPDestroyObject(psShape);
    }
 
-   printf("creating collection...\n");
+   debug_printf("creating geometry collection...\n");
    (*polygons)->geomCollection = GEOSGeom_createCollection(GEOS_MULTIPOLYGON,
       (*polygons)->polygonList, nEntities);
 
@@ -212,15 +216,13 @@ EXIT:
 
 /*
  * shpUnload: Unload shapefile to memory as polygons
- * return: 0 if successful otherwise -1
+ * return: 0 
  */
 int shpUnload(GEOSPolygons **polygons)
 {
-   int isError = 0;
-  
    GEOSPolygons_destroy(polygons);
    
-   return (isError != 0) ? -1 : 0;
+   return 0;
 }
 
 /*

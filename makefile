@@ -21,7 +21,9 @@ CFLAGS=-Wall -std=c99 -g
 CC=gcc
 LIBS=-lgeos_c -Llib -lshp
 
-all: clean $(OUT) test_all
+all: clean out_all test_all
+
+debug: clean out_debug test_debug
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/lib/%.c mkdir_all
 	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $<
@@ -29,11 +31,17 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/lib/%.c mkdir_all
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c mkdir_all
 	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $<
 
-$(OUT): $(OBJ_LIB) $(OBJ_DIR)/main.o
-	$(CC) -o $@ $^ $(LIBS)
+out_all: $(OBJ_LIB) $(OBJ_DIR)/main.o
+	$(CC) -o $(OUT) $^ $(LIBS)
+
+out_debug: $(OBJ_LIB) $(OBJ_DIR)/main.o
+	$(CC) -D DEBUG -o $(OUT) $^ $(LIBS)
    
 test_all: $(OBJ_LIB) $(OBJ_DIR)/test.o
 	$(CC) -o bin/test $^ $(LIBS)
+
+test_debug: $(OBJ_LIB) $(OBJ_DIR)/test.o
+	$(CC) -D DEBUG -o bin/test $^ $(LIBS)
 
 mkdir_all:
 	bash -c "mkdir -p {$(OBJ_DIR),$(OUT_DIR)}"

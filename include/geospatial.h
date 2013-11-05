@@ -4,4 +4,8 @@
 #include <geospolygons.h>
 #include <rasterize.h>
 
+// log and debug
+#include <minlogdbg.h>
+
 #endif // _GEOSPATIAL_H_
+
