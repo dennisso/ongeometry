@@ -17,7 +17,7 @@ OUT = $(OUT_DIR)/$(TARGET)
 
 INCLUDES =-Iinclude
 
-CFLAGS=-Wall -std=c99 -g
+override CFLAGS += -Wall -std=c99 -g
 CC=gcc
 LIBS=-lgeos_c -Llib -lshp
 

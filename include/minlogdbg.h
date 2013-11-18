@@ -34,7 +34,7 @@
 #endif
 
 #ifdef DEBUG
-	#define debug_run(code) (code)
+	#define debug_run(code) code
 #else
 	#define debug_run(code)
 #endif

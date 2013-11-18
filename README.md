@@ -12,11 +12,16 @@ Prerequisites
 - [shapelib (libshp)](http://shapelib.maptools.org)
 - shapefile which contains polygons that represent the landmass
 
-Installation
+Compliation
 ------------
 make
+
+or
+
+make CFLAGS+=-DDEBUG to debug
 
 Use
 ---
 ./bin/OnGeometry <shapefile path> <x||longitude> <y||latitude>
+
 
